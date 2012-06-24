@@ -1,0 +1,22 @@
+#table_container {
+    width: 620px;
+    border: 1px solid #000;
+    float: left;
+}
+#table_container div.block {
+    width: 60px;
+    height: 60px;
+    float: left;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #fff;
+    font-size: 44px;
+    text-align: center;
+}
+
+#table_container div.block:hover {
+    background: linear-gradient(top, #fff, #f0f0f0);
+    background: -webkit-linear-gradient(top, #fff, #f0f0f0);
+    background: -moz-linear-gradient(top, #fff, #f0f0f0);
+    border-color: #ddd;
+}

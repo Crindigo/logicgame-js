@@ -187,8 +187,19 @@ BlockInfo.prototype = {
 var Packet = function(data) {
     this.data = data;
 };
-Packet.prototype.toString = function() {
-    return String(this.data);
+Packet.prototype = {
+    toString: function() {
+        return String(this.data);
+    },
+
+    type: function() {
+        var typ = typeof this.data;
+        if ( typ == 'object' ) {
+            return $.isArray(this.data) ? 'array' : 'object';
+        } else {
+            return typ; // number, string, boolean, function
+        }
+    }
 };
 
 var Part = function() {
@@ -298,136 +309,3 @@ Part.prototype = {
         }
     }
 };
-
-// straight wire, defaults to down -> up connection at UP orientation.
-var StraightWire = function() {
-    this.construct();
-};
-StraightWire.prototype = new Part;
-$.extend(StraightWire.prototype, {
-
-    construct: function() {
-        this.packets = [];
-        this.packetQueue = [];
-        this.inputs = [D_DOWN];
-        this.outputs = [D_UP];
-    },
-
-    render: function($el) {
-        var codes = {
-            0: SPRITES.wire_up,
-            1: SPRITES.wire_right,
-            2: SPRITES.wire_down,
-            3: SPRITES.wire_left
-        };
-
-        $el.text(String.fromCharCode(codes[this.orientation]));
-        if ( this.packets.length > 0 || this.packetQueue.length > 0 ) {
-            $el.css('color', '#0a0');
-        } else {
-            $el.css('color', '#000');
-        }
-    },
-
-    handlePackets: function() {
-        while ( this.packets.length > 0 ) {
-            var pkt = this.packets.shift();
-            var b = this.block.dir(this.outputs[0]);
-
-            if ( b && b.part && b.part.acceptsPacket(oppositeDir(this.outputs[0]), pkt) ) {
-                b.part.pushPacket(oppositeDir(this.outputs[0]), pkt);
-            }
-        }
-    },
-
-    tick: function(t) {
-        this.handlePackets();
-        this.packets = this.packetQueue;
-        this.packetQueue = [];
-    }
-});
-
-// curved wire, defaults to down -> up connection at UP orientation.
-var CurvedWire = function() {
-    this.construct();
-};
-CurvedWire.prototype = new StraightWire;
-$.extend(CurvedWire.prototype, {
-
-    construct: function() {
-        this.packets = [];
-        this.packetQueue = [];
-        this.inputs = [D_DOWN];
-        this.outputs = [D_RIGHT];
-        this.mirrored = false;
-    },
-
-    render: function($el) {
-        var codes = {
-            0: SPRITES.wire_down_right,
-            1: SPRITES.wire_left_down,
-            2: SPRITES.wire_up_left,
-            3: SPRITES.wire_right_up,
-            4: SPRITES.wire_down_left,
-            5: SPRITES.wire_left_up,
-            6: SPRITES.wire_up_right,
-            7: SPRITES.wire_right_down
-        };
-
-        var i = this.orientation + (this.mirrored ? 4 : 0);
-        $el.text(String.fromCharCode(codes[i]));
-        if ( this.packets.length > 0 || this.packetQueue.length > 0 ) {
-            $el.css('color', '#0a0');
-        } else {
-            $el.css('color', '#000');
-        }
-    }
-});
-
-// easier to use
-var CurvedWireFactory = {
-    downRight: function() { return new CurvedWire(); },
-    leftDown: function() { return new CurvedWire().setOrientation(D_RIGHT); },
-    upLeft: function() { return new CurvedWire().setOrientation(D_DOWN); },
-    rightUp: function() { return new CurvedWire().setOrientation(D_LEFT); },
-    downLeft: function() { return new CurvedWire().mirror(); },
-    leftUp: function() { return new CurvedWire().setOrientation(D_RIGHT).mirror(); },
-    upRight: function() { return new CurvedWire().setOrientation(D_DOWN).mirror(); },
-    rightDown: function() { return new CurvedWire().setOrientation(D_LEFT).mirror(); }
-};
-
-var PacketGenerator = function() {
-    this.construct();
-};
-PacketGenerator.prototype = new Part;
-$.extend(PacketGenerator.prototype, {
-
-    construct: function() {
-        this.outputs = [D_UP];
-        this.packetData = 1;
-        this.shouldTickFn = function(t) { return true; };
-    },
-
-    setShouldTickFn: function(f) {
-        this.shouldTickFn = f;
-        return this;
-    },
-
-    render: function($el) {
-        $el.text('G');
-    },
-
-    tick: function(t) {
-        if ( !this.shouldTickFn(t) ) {
-            return;
-        }
-        for ( var i = 0; i < this.outputs.length; i++ ) {
-            var b = this.block.dir(this.outputs[i]);
-            var pkt = new Packet(this.packetData);
-            if ( b && b.part && b.part.acceptsPacket(oppositeDir(this.outputs[i]), pkt) ) {
-                b.part.pushPacket(oppositeDir(this.outputs[i]), pkt);
-                //console.log('Generator pulse ' + t);
-            }
-        }
-    }
-});
