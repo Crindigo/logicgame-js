@@ -1,0 +1,59 @@
+<!doctype html>
+<html>
+<head>
+    <title>Logic Game Thing</title>
+    <script src="jquery-1.7.2.min.js"></script>
+    <script src="game.js"></script>
+    <script>
+        $(document).ready(function() {
+            createTable();
+
+            getBlock(6, 1).setPart(
+                    new PacketGenerator().setOrientation(D_RIGHT).setShouldTickFn(function(t) { return t % 2 == 0; }));
+            getBlock(7, 1).setPart(CurvedWireFactory.leftDown());
+            getBlock(7, 2).setPart(new StraightWire().setOrientation(D_DOWN));
+            getBlock(7, 3).setPart(new StraightWire().setOrientation(D_DOWN));
+            getBlock(7, 4).setPart(new StraightWire().setOrientation(D_DOWN));
+            getBlock(7, 5).setPart(new StraightWire().setOrientation(D_DOWN));
+            getBlock(7, 6).setPart(new StraightWire().setOrientation(D_DOWN));
+            getBlock(7, 7).setPart(CurvedWireFactory.upLeft());
+            getBlock(6, 7).setPart(new StraightWire().setOrientation(D_LEFT));
+            getBlock(5, 7).setPart(new StraightWire().setOrientation(D_LEFT));
+            getBlock(4, 7).setPart(new StraightWire().setOrientation(D_LEFT));
+            getBlock(3, 7).setPart(CurvedWireFactory.rightUp());
+            getBlock(3, 6).setPart(new StraightWire());
+
+            gameLoop();
+        });
+    </script>
+    <style type="text/css">
+        #table_container {
+            width: 620px;
+            border: 1px solid #000;
+            float: left;
+        }
+        #table_container div.block {
+            width: 60px;
+            height: 60px;
+            float: left;
+            margin: 0;
+            padding: 0;
+            border: 1px solid #fff;
+            font-size: 44px;
+            text-align: center;
+        }
+        
+        #table_container div.block:hover {
+            background: linear-gradient(top, #fff, #f0f0f0);
+            background: -webkit-linear-gradient(top, #fff, #f0f0f0);
+            background: -moz-linear-gradient(top, #fff, #f0f0f0);
+            border-color: #ddd;
+        }
+    </style>
+</head>
+<body>
+
+<div id="table_container"></div>
+
+</body>
+</html>
