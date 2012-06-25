@@ -4,8 +4,8 @@
     <title>Logic Game Thing</title>
     <link href="media/style.css" type="text/css" rel="stylesheet">
     <script src="media/jquery-1.7.2.min.js"></script>
-    <script src="media/game.js"></script>
-    <script src="media/parts.js"></script>
+    <script src="media/game2.js"></script>
+    <script src="media/parts2.js"></script>
     <script>
         $(document).ready(function() {
             createTable();
@@ -14,6 +14,8 @@
                     new PacketGenerator(1).setOrientation(D_RIGHT).setShouldTickFn(function(t) { return t % 2 == 0; }));
             getBlock(7, 1).setPart(WireFactory.leftDown());
             getBlock(7, 2).setPart(WireFactory.upDown());
+            //getBlock(7, 3).setPart(new ConsoleLogger('L1'));
+
             getBlock(7, 3).setPart(WireFactory.upDown());
             getBlock(7, 4).setPart(WireFactory.upDown());
             getBlock(7, 5).setPart(WireFactory.upDown());
