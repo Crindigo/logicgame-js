@@ -18,15 +18,25 @@
 
             getBlock(7, 3).setPart(WireFactory.upDown());
             getBlock(7, 4).setPart(WireFactory.upDown());
-            getBlock(7, 5).setPart(WireFactory.upDown());
+            getBlock(7, 5).setPart(new Accumulator(2).setOrientation(D_DOWN));
             getBlock(7, 6).setPart(WireFactory.upDown());
             getBlock(7, 7).setPart(WireFactory.upLeft());
             getBlock(6, 7).setPart(WireFactory.rightLeft());
-            getBlock(5, 7).setPart(new Accumulator(2).setOrientation(D_LEFT));
+            getBlock(5, 7).setPart(new ArrayBuilder(3).setOrientation(D_LEFT));
             getBlock(4, 7).setPart(WireFactory.rightLeft());
             getBlock(3, 7).setPart(WireFactory.rightUp());
             getBlock(3, 6).setPart(WireFactory.downUp());
-            getBlock(3, 5).setPart(new ConsoleLogger('L1'));
+            //getBlock(3, 5).setPart(new ConsoleLogger('L1'));
+
+            var winning = new DuhWinning();
+            winning.inputs = [D_DOWN];
+            winning.isWinner = function(pkt) {
+                var d = pkt.data;
+                console.log(pkt);
+                console.log([pkt.type(), d]);
+                return pkt.type() == 'array' && d[0] == 3 && d[1] == 3 && d[2] == 3;
+            };
+            getBlock(3, 5).setPart(winning);
 
             gameLoop();
         });

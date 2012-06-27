@@ -1,0 +1,216 @@
+<!DOCTYPE html>  <html> <head>   <title>game2.coffee</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>            <div id="jump_to">         Jump To &hellip;         <div id="jump_wrapper">           <div id="jump_page">                                           <a class="source" href="game2.html">                 game2.coffee               </a>                                           <a class="source" href="parts2.html">                 parts2.coffee               </a>                        </div>         </div>       </div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               game2.coffee             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>               <p>This file deals with some base variables, functions, and classes for the
+game. Included is some rendering code, utilities for grid positions, the
+BaseObject class (allows for easy use of traits), Packet class, and the base
+base Part class, the parent of all wires and computers.</p>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <h3>Global Variable Setup</h3>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>The number of rows and columns in the grid.</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">ROWS = </span><span class="mi">10</span>
+<span class="nv">COLS = </span><span class="mi">10</span></pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>Directional constants, used when configuring the input/output ports on Parts.</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">D_UP = </span><span class="mi">0</span>
+<span class="nv">D_RIGHT = </span><span class="mi">1</span>
+<span class="nv">D_DOWN = </span><span class="mi">2</span>
+<span class="nv">D_LEFT = </span><span class="mi">3</span></pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p>Arrays for tracking and caching game data.</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">BLOCKS = </span><span class="p">[];</span>
+<span class="nv">PARTS = </span><span class="p">[];</span>
+<span class="nv">PACKETS = </span><span class="p">[];</span></pre></div>             </td>           </tr>                               <tr id="section-6">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-6">&#182;</a>               </div>               <p>List of "sprites" which are really just unicode characters (for now).</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">SPRITES = </span><span class="p">{</span>
+  <span class="nv">wire_up: </span><span class="mh">0x257D</span>
+  <span class="nv">wire_right: </span><span class="mh">0x257E</span>
+  <span class="nv">wire_down: </span><span class="mh">0x257F</span>
+  <span class="nv">wire_left: </span><span class="mh">0x257C</span>
+
+  <span class="nv">wire_down_right: </span><span class="mh">0x250E</span>
+  <span class="nv">wire_left_down: </span><span class="mh">0x2511</span>
+  <span class="nv">wire_up_left: </span><span class="mh">0x251A</span>
+  <span class="nv">wire_right_up: </span><span class="mh">0x2515</span>
+  <span class="nv">wire_down_left: </span><span class="mh">0x2512</span>
+  <span class="nv">wire_left_up: </span><span class="mh">0x2519</span>
+  <span class="nv">wire_up_right: </span><span class="mh">0x2516</span>
+  <span class="nv">wire_right_down: </span><span class="mh">0x250D</span>
+<span class="p">}</span></pre></div>             </td>           </tr>                               <tr id="section-7">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-7">&#182;</a>               </div>               <h3>Global Functions</h3>
+
+<p>Extracts and caches the list of parts from the full grid data.</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">buildPartCache = </span><span class="o">-&gt;</span>
+  <span class="nb">window</span><span class="p">.</span><span class="nv">PARTS = </span><span class="p">(</span><span class="nx">block</span><span class="p">.</span><span class="nx">part</span> <span class="k">for</span> <span class="nx">block</span> <span class="k">in</span> <span class="nb">window</span><span class="p">.</span><span class="nx">BLOCKS</span> <span class="k">when</span> <span class="nx">block</span><span class="p">.</span><span class="nx">part</span><span class="o">?</span><span class="p">)</span>
+  <span class="kc">true</span></pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <p>Ticks the game, given parameter <code>t</code> which is the current tick number.</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">gameTick = </span><span class="nf">(t) -&gt;</span>
+  <span class="nv">part.ticked = </span><span class="kc">false</span> <span class="k">for</span> <span class="nx">part</span> <span class="k">in</span> <span class="nb">window</span><span class="p">.</span><span class="nx">PARTS</span>
+  <span class="k">for</span> <span class="nx">part</span> <span class="k">in</span> <span class="nb">window</span><span class="p">.</span><span class="nx">PARTS</span>
+    <span class="nx">part</span><span class="p">.</span><span class="nx">tick</span> <span class="nx">t</span>
+    <span class="nv">part.ticked = </span><span class="kc">true</span>
+  <span class="kc">true</span></pre></div>             </td>           </tr>                               <tr id="section-9">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-9">&#182;</a>               </div>               <p>Variables for tracking the current tick number, tick interval, and the game's
+interval ID.</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">TICK = </span><span class="mi">0</span>
+<span class="nb">window</span><span class="p">.</span><span class="nv">TICKTIME = </span><span class="mi">1000</span>
+<span class="nv">IntervalID = </span><span class="mi">0</span></pre></div>             </td>           </tr>                               <tr id="section-10">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-10">&#182;</a>               </div>               <p>Starts executing the game loop.</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">gameLoop = </span><span class="o">-&gt;</span>
+  <span class="nx">buildPartCache</span><span class="p">()</span>
+  <span class="nx">renderTable</span><span class="p">()</span>
+
+  <span class="nv">IntervalID = </span><span class="nx">setInterval</span> <span class="o">-&gt;</span>
+    <span class="nx">gameTick</span> <span class="o">++</span><span class="nx">TICK</span>
+    <span class="nx">renderTable</span><span class="p">()</span>
+    <span class="kc">true</span>
+  <span class="p">,</span> <span class="nx">TICKTIME</span></pre></div>             </td>           </tr>                               <tr id="section-11">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-11">&#182;</a>               </div>               <p>Pauses the game loop by clearing the interval.</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">pauseLoop = </span><span class="o">-&gt;</span>
+  <span class="nx">clearInterval</span> <span class="nx">IntervalID</span></pre></div>             </td>           </tr>                               <tr id="section-12">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-12">&#182;</a>               </div>               <p>Given a directional constant <code>d</code>, returns its opposite (left becomes right,
+up becomes down, etc.)</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">oppositeDir = </span><span class="nf">(d) -&gt;</span>
+  <span class="k">switch</span> <span class="nx">d</span>
+    <span class="k">when</span> <span class="nx">D_UP</span> <span class="k">then</span> <span class="nx">D_DOWN</span>
+    <span class="k">when</span> <span class="nx">D_RIGHT</span> <span class="k">then</span> <span class="nx">D_LEFT</span>
+    <span class="k">when</span> <span class="nx">D_DOWN</span> <span class="k">then</span> <span class="nx">D_UP</span>
+    <span class="k">when</span> <span class="nx">D_LEFT</span> <span class="k">then</span> <span class="nx">D_RIGHT</span>
+    <span class="k">else</span> <span class="kc">null</span></pre></div>             </td>           </tr>                               <tr id="section-13">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-13">&#182;</a>               </div>               <p>Creates a grid of div elements and inserts them into an element with ID
+table_container. Also creates a list of <code>BlockInfo</code> objects for each element
+and stores them inside of <code>BLOCKS</code> for later use.</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">createTable = </span><span class="o">-&gt;</span>
+  <span class="nv">size = </span><span class="nb">window</span><span class="p">.</span><span class="nx">ROWS</span> <span class="o">*</span> <span class="nb">window</span><span class="p">.</span><span class="nx">COLS</span>
+  <span class="k">for</span> <span class="nx">i</span> <span class="k">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">...</span><span class="nx">size</span><span class="p">]</span>
+    <span class="nv">block = </span><span class="nx">$</span> <span class="s">&#39;&lt;div&gt;&lt;/div&gt;&#39;</span>
+    <span class="nx">block</span><span class="p">.</span><span class="nx">addClass</span> <span class="s">&#39;block&#39;</span>
+    <span class="nx">block</span><span class="p">.</span><span class="nx">attr</span> <span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="s">&quot;block</span><span class="si">#{</span><span class="nx">i</span><span class="si">}</span><span class="s">&quot;</span>
+    <span class="nx">$</span><span class="p">(</span><span class="s">&#39;#table_container&#39;</span><span class="p">).</span><span class="nx">append</span> <span class="nx">block</span>
+    <span class="nv">b = </span><span class="k">new</span> <span class="nx">BlockInfo</span> <span class="nx">block</span><span class="p">,</span> <span class="p">(</span><span class="k">new</span> <span class="nx">Pos</span><span class="p">(</span><span class="nx">i</span> <span class="o">%</span> <span class="nb">window</span><span class="p">.</span><span class="nx">COLS</span><span class="p">,</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span> <span class="nx">i</span> <span class="o">/</span> <span class="nb">window</span><span class="p">.</span><span class="nx">COLS</span><span class="p">))</span>
+    <span class="nb">window</span><span class="p">.</span><span class="nx">BLOCKS</span><span class="p">.</span><span class="nx">push</span> <span class="nx">b</span>
+  <span class="kc">true</span></pre></div>             </td>           </tr>                               <tr id="section-14">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-14">&#182;</a>               </div>               <p>Renders each block in the list. Later on, this should only render blocks that
+have updated, but it seems to run fine for now.</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">renderTable = </span><span class="o">-&gt;</span>
+  <span class="nx">block</span><span class="p">.</span><span class="nx">render</span><span class="p">()</span> <span class="k">for</span> <span class="nx">block</span> <span class="k">in</span> <span class="nb">window</span><span class="p">.</span><span class="nx">BLOCKS</span>
+  <span class="kc">true</span></pre></div>             </td>           </tr>                               <tr id="section-15">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-15">&#182;</a>               </div>               <p>Gets the <code>BlockInfo</code> record at the given <code>x</code>, <code>y</code> position.</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">getBlock = </span><span class="nf">(x, y) -&gt;</span>
+  <span class="nb">window</span><span class="p">.</span><span class="nx">BLOCKS</span><span class="p">[</span><span class="nx">y</span> <span class="o">*</span> <span class="nb">window</span><span class="p">.</span><span class="nx">COLS</span> <span class="o">+</span> <span class="nx">x</span><span class="p">]</span></pre></div>             </td>           </tr>                               <tr id="section-16">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-16">&#182;</a>               </div>               <p>Gets the jQuery div element at the given <code>x</code>, <code>y</code> position.</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">getBlockDiv = </span><span class="nf">(x, y) -&gt;</span>
+  <span class="nx">$</span> <span class="s">&quot;</span><span class="err">#</span><span class="s">block</span><span class="si">#{</span><span class="nx">y</span> <span class="o">*</span> <span class="nb">window</span><span class="p">.</span><span class="nx">COLS</span> <span class="o">+</span> <span class="nx">x</span><span class="si">}</span><span class="s">&quot;</span></pre></div>             </td>           </tr>                               <tr id="section-17">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-17">&#182;</a>               </div>               <h3>Class Definitions</h3>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-18">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-18">&#182;</a>               </div>               <p>The BaseObject class contains one static <code>@use</code> method, which accepts an
+object <code>obj</code> and mixes in its properties to the class's instance properties.</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="k">class</span> <span class="nx">BaseObject</span>
+  <span class="vi">@use: </span><span class="nf">(obj) -&gt;</span>
+    <span class="k">for</span> <span class="nx">key</span><span class="p">,</span> <span class="nx">value</span> <span class="k">of</span> <span class="nx">obj</span>
+      <span class="nx">@</span><span class="o">::</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nx">value</span>
+    <span class="k">this</span></pre></div>             </td>           </tr>                               <tr id="section-19">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-19">&#182;</a>               </div>               <p>The Pos class represents a grid position and contains utility methods for
+returning new Pos objects relative to the current position.</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="k">class</span> <span class="nx">Pos</span>
+  <span class="nv">constructor: </span><span class="nf">(@x, @y) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-20">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-20">&#182;</a>               </div>               <p>The following methods will return the corresponding Pos object for the
+position up, down, left, or to the right. If the position would be outside
+of the grid, <code>null</code> is returned.</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">up: </span><span class="o">-&gt;</span>
+    <span class="k">if</span> <span class="nx">@y</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">then</span> <span class="kc">null</span> <span class="k">else</span> <span class="k">new</span> <span class="nx">Pos</span> <span class="nx">@x</span><span class="p">,</span> <span class="nx">@y</span> <span class="o">-</span> <span class="mi">1</span>
+  <span class="nv">down: </span><span class="o">-&gt;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">@y</span> <span class="o">==</span> <span class="nb">window</span><span class="p">.</span><span class="nx">ROWS</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="k">then</span> <span class="kc">null</span> <span class="k">else</span> <span class="k">new</span> <span class="nx">Pos</span> <span class="nx">@x</span><span class="p">,</span> <span class="nx">@y</span> <span class="o">+</span> <span class="mi">1</span>
+  <span class="nv">left: </span><span class="o">-&gt;</span>
+    <span class="k">if</span> <span class="nx">@x</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">then</span> <span class="kc">null</span> <span class="k">else</span> <span class="k">new</span> <span class="nx">Pos</span> <span class="nx">@x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">@y</span>
+  <span class="nv">right: </span><span class="o">-&gt;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">@x</span> <span class="o">==</span> <span class="nb">window</span><span class="p">.</span><span class="nx">COLS</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="k">then</span> <span class="kc">null</span> <span class="k">else</span> <span class="k">new</span> <span class="nx">Pos</span> <span class="nx">@x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">@y</span></pre></div>             </td>           </tr>                               <tr id="section-21">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-21">&#182;</a>               </div>               <p>Similar to the above methods, dir accepts a directional constant <code>o</code> and
+calls the proper direction method for the given value. If no position
+exists in the direction, or the direction is invalid, <code>null</code> is returned.</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">dir: </span><span class="nf">(o) -&gt;</span>
+    <span class="k">return</span> <span class="kc">null</span> <span class="k">if</span> <span class="o">!</span><span class="nx">@hasDir</span> <span class="nx">o</span>
+
+    <span class="k">switch</span> <span class="nx">o</span>
+      <span class="k">when</span> <span class="nx">D_UP</span> <span class="k">then</span> <span class="nx">@up</span><span class="p">()</span>
+      <span class="k">when</span> <span class="nx">D_RIGHT</span> <span class="k">then</span> <span class="nx">@right</span><span class="p">()</span>
+      <span class="k">when</span> <span class="nx">D_DOWN</span> <span class="k">then</span> <span class="nx">@down</span><span class="p">()</span>
+      <span class="k">when</span> <span class="nx">D_LEFT</span> <span class="k">then</span> <span class="nx">@left</span><span class="p">()</span>
+      <span class="k">else</span> <span class="kc">null</span></pre></div>             </td>           </tr>                               <tr id="section-22">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-22">&#182;</a>               </div>               <p>Accepts a directional constant <code>o</code> and returns boolean true if a position
+exists in that direction, false if not.</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">hasDir: </span><span class="nf">(o) -&gt;</span>
+    <span class="k">switch</span> <span class="nx">o</span>
+      <span class="k">when</span> <span class="nx">D_UP</span> <span class="k">then</span> <span class="nx">@y</span> <span class="o">&gt;</span> <span class="mi">0</span>
+      <span class="k">when</span> <span class="nx">D_RIGHT</span> <span class="k">then</span> <span class="nx">@x</span> <span class="o">&lt;</span> <span class="p">(</span><span class="nb">window</span><span class="p">.</span><span class="nx">COLS</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+      <span class="k">when</span> <span class="nx">D_DOWN</span> <span class="k">then</span> <span class="nx">@y</span> <span class="o">&lt;</span> <span class="p">(</span><span class="nb">window</span><span class="p">.</span><span class="nx">ROWS</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+      <span class="k">when</span> <span class="nx">D_LEFT</span> <span class="k">then</span> <span class="nx">@x</span> <span class="o">&gt;</span> <span class="mi">0</span>
+      <span class="k">else</span> <span class="kc">false</span></pre></div>             </td>           </tr>                               <tr id="section-23">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-23">&#182;</a>               </div>               <p>Returns an integer index representing this position that can be used
+inside of the <code>BLOCKS</code> array.</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">index: </span><span class="o">-&gt;</span>
+    <span class="nx">@y</span> <span class="o">*</span> <span class="nb">window</span><span class="p">.</span><span class="nx">COLS</span> <span class="o">+</span> <span class="nx">@x</span>
+
+<span class="k">class</span> <span class="nx">BlockInfo</span>
+  <span class="nv">constructor: </span><span class="nf">(@element, @pos) -&gt;</span>
+    <span class="vi">@part = </span><span class="kc">null</span>
+
+  <span class="nv">render: </span><span class="o">-&gt;</span>
+    <span class="nx">@part</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">@element</span><span class="p">)</span> <span class="k">if</span> <span class="nx">@part</span><span class="o">?</span>
+
+  <span class="nv">dir: </span><span class="nf">(o) -&gt;</span>
+    <span class="nv">p = </span><span class="nx">@pos</span><span class="p">.</span><span class="nx">dir</span><span class="p">(</span><span class="nx">o</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nx">p</span><span class="o">?</span> <span class="k">then</span> <span class="nb">window</span><span class="p">.</span><span class="nx">BLOCKS</span><span class="p">[</span><span class="nx">p</span><span class="p">.</span><span class="nx">index</span><span class="p">()]</span> <span class="k">else</span> <span class="kc">null</span>
+
+  <span class="nv">setPart: </span><span class="nf">(p) -&gt;</span>
+    <span class="vi">@part = </span><span class="nx">p</span>
+    <span class="nv">p.block = </span><span class="nx">@</span>
+
+<span class="k">class</span> <span class="nx">Packet</span>
+  <span class="nv">constructor: </span><span class="nf">(@data) -&gt;</span>
+
+  <span class="nv">toString: </span><span class="o">-&gt;</span>
+    <span class="k">return</span> <span class="nb">String</span><span class="p">(</span><span class="nx">@data</span><span class="p">)</span>
+
+  <span class="nv">type: </span><span class="o">-&gt;</span>
+    <span class="nv">typ = </span><span class="k">typeof</span> <span class="nx">@data</span>
+    <span class="k">if</span> <span class="nx">typ</span> <span class="o">==</span> <span class="s">&#39;object&#39;</span>
+      <span class="k">if</span> <span class="nx">$</span><span class="p">.</span><span class="nx">isArray</span> <span class="nx">@data</span> <span class="k">then</span> <span class="s">&#39;array&#39;</span> <span class="k">else</span> <span class="s">&#39;object&#39;</span>
+    <span class="k">else</span>
+      <span class="nx">typ</span>
+
+<span class="nv">PART_UNIQ = </span><span class="mi">0</span>
+
+<span class="k">class</span> <span class="nx">Part</span> <span class="k">extends</span> <span class="nx">BaseObject</span>
+
+  <span class="nv">uniqid: </span><span class="mi">0</span>
+  <span class="nv">packets: </span><span class="p">[]</span>
+  <span class="nv">packetQueue: </span><span class="p">[]</span>
+  <span class="nv">orientation: </span><span class="mi">0</span>
+  <span class="nv">mirrored: </span><span class="kc">false</span>
+  <span class="nv">inputs: </span><span class="p">[]</span>
+  <span class="nv">outputs: </span><span class="p">[]</span>
+  <span class="nv">block: </span><span class="kc">null</span>
+  <span class="nv">ticked: </span><span class="kc">false</span>
+
+  <span class="nv">constructor: </span><span class="o">-&gt;</span>
+    <span class="vi">@uniqid = </span><span class="o">++</span><span class="nx">PART_UNIQ</span>
+
+  <span class="nv">render: </span><span class="nf">(el) -&gt;</span>
+
+  <span class="nv">isVertical: </span><span class="nf">(o) -&gt;</span>
+    <span class="k">if</span> <span class="o">not</span> <span class="nx">o</span><span class="o">?</span> <span class="k">then</span> <span class="nv">o = </span><span class="nx">@orientation</span>
+    <span class="nx">o</span> <span class="o">==</span> <span class="nx">D_UP</span> <span class="o">||</span> <span class="nx">o</span> <span class="o">==</span> <span class="nx">D_DOWN</span>
+
+  <span class="nv">isHorizontal: </span><span class="nf">(o) -&gt;</span>
+    <span class="o">not</span> <span class="nx">@isVertical</span><span class="p">(</span><span class="nx">o</span><span class="p">)</span>
+
+  <span class="nv">setOrientation: </span><span class="nf">(o) -&gt;</span>
+    <span class="nv">cur = </span><span class="nx">@orientation</span>
+    <span class="k">return</span> <span class="nx">@</span> <span class="k">if</span> <span class="p">(</span><span class="nx">cur</span> <span class="o">==</span> <span class="nx">o</span> <span class="o">or</span> <span class="nx">o</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="o">or</span> <span class="nx">o</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">)</span></pre></div>             </td>           </tr>                               <tr id="section-24">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-24">&#182;</a>               </div>               <p>find the number of times we need to rotate right</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">rot = </span><span class="k">if</span> <span class="nx">o</span> <span class="o">&lt;</span> <span class="nx">cur</span> <span class="k">then</span> <span class="mi">4</span> <span class="o">-</span> <span class="p">(</span><span class="nx">cur</span> <span class="o">-</span> <span class="nx">o</span><span class="p">)</span> <span class="k">else</span> <span class="nx">o</span> <span class="o">-</span> <span class="nx">cur</span>
+
+    <span class="k">for</span> <span class="nx">input</span><span class="p">,</span> <span class="nx">i</span> <span class="k">in</span> <span class="nx">@inputs</span>
+      <span class="nx">@inputs</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="nx">input</span> <span class="o">+</span> <span class="nx">rot</span><span class="p">)</span> <span class="o">%</span> <span class="mi">4</span>
+
+    <span class="k">for</span> <span class="nx">output</span><span class="p">,</span> <span class="nx">i</span> <span class="k">in</span> <span class="nx">@outputs</span>
+      <span class="nx">@outputs</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="nx">output</span> <span class="o">+</span> <span class="nx">rot</span><span class="p">)</span> <span class="o">%</span> <span class="mi">4</span>
+
+    <span class="vi">@orientation = </span><span class="nx">o</span>
+    <span class="nx">@</span>
+
+  <span class="nv">mirror: </span><span class="o">-&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-25">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-25">&#182;</a>               </div>               <p>if cur orientation is vert, swap left/right
+else swap up/down</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">for</span> <span class="nx">input</span><span class="p">,</span> <span class="nx">i</span> <span class="k">in</span> <span class="nx">@inputs</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">@isVertical</span><span class="p">()</span> <span class="o">and</span> <span class="nx">@isHorizontal</span><span class="p">(</span><span class="nx">input</span><span class="p">))</span> <span class="o">or</span> <span class="p">(</span><span class="nx">@isHorizontal</span><span class="p">()</span> <span class="o">and</span> <span class="nx">@isVertical</span><span class="p">(</span><span class="nx">input</span><span class="p">))</span>
+        <span class="nx">@inputs</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">oppositeDir</span> <span class="nx">input</span>
+
+    <span class="k">for</span> <span class="nx">output</span><span class="p">,</span> <span class="nx">i</span> <span class="k">in</span> <span class="nx">@outputs</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">@isVertical</span><span class="p">()</span> <span class="o">and</span> <span class="nx">@isHorizontal</span><span class="p">(</span><span class="nx">output</span><span class="p">))</span> <span class="o">or</span> <span class="p">(</span><span class="nx">@isHorizontal</span><span class="p">()</span> <span class="o">and</span> <span class="nx">@isVertical</span><span class="p">(</span><span class="nx">output</span><span class="p">))</span>
+        <span class="nx">@outputs</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">oppositeDir</span> <span class="nx">output</span>
+
+    <span class="vi">@mirrored = </span><span class="o">not</span> <span class="nx">@mirrored</span>
+    <span class="nx">@</span>
+
+  <span class="nv">hasInput: </span><span class="nf">(dir) -&gt;</span>
+    <span class="nx">dir</span> <span class="k">in</span> <span class="nx">@inputs</span>
+
+  <span class="nv">acceptsPacket: </span><span class="nf">(dir, pkt) -&gt;</span>
+    <span class="nx">@hasInput</span> <span class="nx">dir</span>
+
+  <span class="nv">pushPacket: </span><span class="nf">(dir, pkt) -&gt;</span>
+    <span class="k">if</span> <span class="nx">@ticked</span> <span class="k">then</span> <span class="nx">@packets</span><span class="p">.</span><span class="nx">push</span> <span class="nx">pkt</span> <span class="k">else</span> <span class="nx">@packetQueue</span><span class="p">.</span><span class="nx">push</span> <span class="nx">pkt</span></pre></div>             </td>           </tr>                               <tr id="section-26">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-26">&#182;</a>               </div>               <h3>Exports</h3>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-27">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-27">&#182;</a>               </div>               <p>The following statements are for exporting local variables, functions, and
+classes into the global namespace.</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nb">window</span><span class="p">.</span><span class="nv">ROWS = </span><span class="nx">ROWS</span>
+<span class="nb">window</span><span class="p">.</span><span class="nv">COLS = </span><span class="nx">COLS</span>
+<span class="nb">window</span><span class="p">.</span><span class="nv">D_UP = </span><span class="nx">D_UP</span>
+<span class="nb">window</span><span class="p">.</span><span class="nv">D_RIGHT = </span><span class="nx">D_RIGHT</span>
+<span class="nb">window</span><span class="p">.</span><span class="nv">D_DOWN = </span><span class="nx">D_DOWN</span>
+<span class="nb">window</span><span class="p">.</span><span class="nv">D_LEFT = </span><span class="nx">D_LEFT</span>
+<span class="nb">window</span><span class="p">.</span><span class="nv">BLOCKS = </span><span class="nx">BLOCKS</span>
+<span class="nb">window</span><span class="p">.</span><span class="nv">PARTS = </span><span class="nx">PARTS</span>
+<span class="nb">window</span><span class="p">.</span><span class="nv">PACKETS = </span><span class="nx">PACKETS</span>
+<span class="nb">window</span><span class="p">.</span><span class="nv">SPRITES = </span><span class="nx">SPRITES</span>
+
+<span class="nb">window</span><span class="p">.</span><span class="nv">gameLoop = </span><span class="nx">gameLoop</span>
+<span class="nb">window</span><span class="p">.</span><span class="nv">pauseLoop = </span><span class="nx">pauseLoop</span>
+<span class="nb">window</span><span class="p">.</span><span class="nv">oppositeDir = </span><span class="nx">oppositeDir</span>
+<span class="nb">window</span><span class="p">.</span><span class="nv">createTable = </span><span class="nx">createTable</span>
+<span class="nb">window</span><span class="p">.</span><span class="nv">getBlock = </span><span class="nx">getBlock</span>
+<span class="nb">window</span><span class="p">.</span><span class="nv">getBlockDiv = </span><span class="nx">getBlockDiv</span>
+
+<span class="nb">window</span><span class="p">.</span><span class="nv">BaseObject = </span><span class="nx">BaseObject</span>
+<span class="nb">window</span><span class="p">.</span><span class="nv">Pos = </span><span class="nx">Pos</span>
+<span class="nb">window</span><span class="p">.</span><span class="nv">Packet = </span><span class="nx">Packet</span>
+<span class="nb">window</span><span class="p">.</span><span class="nv">BlockInfo = </span><span class="nx">BlockInfo</span>
+<span class="nb">window</span><span class="p">.</span><span class="nv">Part = </span><span class="nx">Part</span>
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 

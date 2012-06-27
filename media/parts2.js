@@ -9,7 +9,7 @@ MIT License
 
 
 (function() {
-  var Accumulator, ConsoleLogger, CurvedWire, Packet, PacketGenerator, PacketHandlerTrait, Part, StraightWire, WireFactory, oppositeDir,
+  var Accumulator, ArrayBuilder, ConsoleLogger, CurvedWire, D_DOWN, D_LEFT, D_RIGHT, D_UP, DuhWinning, Packet, PacketGenerator, PacketHandlerTrait, Part, SPRITES, StraightWire, WireFactory, oppositeDir,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -19,10 +19,20 @@ MIT License
 
   oppositeDir = window.oppositeDir;
 
+  D_UP = window.D_UP;
+
+  D_DOWN = window.D_DOWN;
+
+  D_LEFT = window.D_LEFT;
+
+  D_RIGHT = window.D_RIGHT;
+
+  SPRITES = window.SPRITES;
+
   PacketHandlerTrait = {
     tick: function(t) {
       this.handlePackets();
-      this.packets = this.packetQueue;
+      this.packets = this.packets.concat(this.packetQueue);
       return this.packetQueue = [];
     }
   };
@@ -33,12 +43,12 @@ MIT License
 
     StraightWire.use(PacketHandlerTrait);
 
-    StraightWire.spriteCodes = [window.SPRITES.wire_up, window.SPRITES.wire_right, window.SPRITES.wire_down, window.SPRITES.wire_left];
+    StraightWire.spriteCodes = [SPRITES.wire_up, SPRITES.wire_right, SPRITES.wire_down, SPRITES.wire_left];
 
     function StraightWire() {
       StraightWire.__super__.constructor.apply(this, arguments);
-      this.inputs = [window.D_DOWN];
-      this.outputs = [window.D_UP];
+      this.inputs = [D_DOWN];
+      this.outputs = [D_UP];
     }
 
     StraightWire.prototype.render = function(el) {
@@ -66,12 +76,14 @@ MIT License
 
     __extends(CurvedWire, _super);
 
-    CurvedWire.spriteCodes = [window.SPRITES.wire_down_right, window.SPRITES.wire_left_down, window.SPRITES.wire_up_left, window.SPRITES.wire_right_up, window.SPRITES.wire_down_left, window.SPRITES.wire_left_up, window.SPRITES.wire_up_right, window.SPRITES.wire_right_down];
+    CurvedWire.spriteCodes = [SPRITES.wire_down_right, SPRITES.wire_left_down, SPRITES.wire_up_left, SPRITES.wire_right_up, SPRITES.wire_down_left, SPRITES.wire_left_up, SPRITES.wire_up_right, SPRITES.wire_right_down];
 
     function CurvedWire() {
       CurvedWire.__super__.constructor.apply(this, arguments);
-      this.outputs = [window.D_RIGHT];
+      this.outputs = [D_RIGHT];
       this.mirrored = false;
+      this.packets = [];
+      this.packetQueue = [];
     }
 
     CurvedWire.prototype.render = function(el) {
@@ -90,37 +102,37 @@ MIT License
       return new StraightWire();
     },
     leftRight: function() {
-      return new StraightWire().setOrientation(window.D_RIGHT);
+      return new StraightWire().setOrientation(D_RIGHT);
     },
     upDown: function() {
-      return new StraightWire().setOrientation(window.D_DOWN);
+      return new StraightWire().setOrientation(D_DOWN);
     },
     rightLeft: function() {
-      return new StraightWire().setOrientation(window.D_LEFT);
+      return new StraightWire().setOrientation(D_LEFT);
     },
     downRight: function() {
       return new CurvedWire();
     },
     leftDown: function() {
-      return new CurvedWire().setOrientation(window.D_RIGHT);
+      return new CurvedWire().setOrientation(D_RIGHT);
     },
     upLeft: function() {
-      return new CurvedWire().setOrientation(window.D_DOWN);
+      return new CurvedWire().setOrientation(D_DOWN);
     },
     rightUp: function() {
-      return new CurvedWire().setOrientation(window.D_LEFT);
+      return new CurvedWire().setOrientation(D_LEFT);
     },
     downLeft: function() {
       return new CurvedWire();
     },
     leftUp: function() {
-      return new CurvedWire().setOrientation(window.D_RIGHT).mirror();
+      return new CurvedWire().setOrientation(D_RIGHT).mirror();
     },
     upRight: function() {
-      return new CurvedWire().setOrientation(window.D_DOWN).mirror();
+      return new CurvedWire().setOrientation(D_DOWN).mirror();
     },
     rightDown: function() {
-      return new CurvedWire().setOrientation(window.D_LEFT).mirror();
+      return new CurvedWire().setOrientation(D_LEFT).mirror();
     }
   };
 
@@ -130,7 +142,8 @@ MIT License
 
     function PacketGenerator(data) {
       this.data = data;
-      this.outputs = [window.D_UP];
+      PacketGenerator.__super__.constructor.apply(this, arguments);
+      this.outputs = [D_UP];
       this.shouldTickFn = function(t) {
         return true;
       };
@@ -174,8 +187,9 @@ MIT License
 
     function Accumulator(inc) {
       this.inc = inc;
-      this.inputs = [window.D_DOWN];
-      this.outputs = [window.D_UP];
+      Accumulator.__super__.constructor.apply(this, arguments);
+      this.inputs = [D_DOWN];
+      this.outputs = [D_UP];
     }
 
     Accumulator.prototype.render = function(el) {
@@ -212,7 +226,8 @@ MIT License
 
     function ConsoleLogger(key) {
       this.key = key;
-      this.inputs = [window.D_UP, window.D_RIGHT, window.D_DOWN, window.D_LEFT];
+      ConsoleLogger.__super__.constructor.apply(this, arguments);
+      this.inputs = [D_UP, D_RIGHT, D_DOWN, D_LEFT];
     }
 
     ConsoleLogger.prototype.render = function(el) {
@@ -232,6 +247,85 @@ MIT License
 
   })(Part);
 
+  ArrayBuilder = (function(_super) {
+
+    __extends(ArrayBuilder, _super);
+
+    ArrayBuilder.use(PacketHandlerTrait);
+
+    function ArrayBuilder(size) {
+      this.size = size;
+      ArrayBuilder.__super__.constructor.apply(this, arguments);
+      this.inputs = [D_DOWN];
+      this.outputs = [D_UP];
+    }
+
+    ArrayBuilder.prototype.render = function(el) {
+      return el.html("A<sup>" + (this.packets.length + this.packetQueue.length) + "</sup>");
+    };
+
+    ArrayBuilder.prototype.handlePackets = function() {
+      var arr, b, output, p, pkt;
+      if (this.packets.length >= this.size) {
+        output = this.outputs[0];
+        b = this.block.dir(output);
+        arr = (function() {
+          var _i, _len, _ref, _results;
+          _ref = this.packets.splice(0, this.size);
+          _results = [];
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            p = _ref[_i];
+            _results.push(p.data);
+          }
+          return _results;
+        }).call(this);
+        pkt = new Packet(arr);
+        if ((b != null) && (b.part != null) && b.part.acceptsPacket(oppositeDir(output), pkt)) {
+          return b.part.pushPacket(oppositeDir(output), pkt);
+        }
+      }
+    };
+
+    return ArrayBuilder;
+
+  })(Part);
+
+  DuhWinning = (function(_super) {
+
+    __extends(DuhWinning, _super);
+
+    DuhWinning.use(PacketHandlerTrait);
+
+    function DuhWinning() {
+      DuhWinning.__super__.constructor.apply(this, arguments);
+      this.inputs = [];
+    }
+
+    DuhWinning.prototype.render = function(el) {
+      return el.text('W');
+    };
+
+    DuhWinning.prototype.isWinner = function(pkt) {
+      return false;
+    };
+
+    DuhWinning.prototype.acceptsPacket = function(dir, pkt) {
+      return this.hasInput(dir) && this.isWinner(pkt);
+    };
+
+    DuhWinning.prototype.handlePackets = function() {
+      var pkt;
+      if (this.packets.length > 0) {
+        pkt = this.packets.shift();
+        alert('You win!');
+        return window.pauseLoop();
+      }
+    };
+
+    return DuhWinning;
+
+  })(Part);
+
   window.StraightWire = StraightWire;
 
   window.CurvedWire = CurvedWire;
@@ -243,5 +337,9 @@ MIT License
   window.Accumulator = Accumulator;
 
   window.ConsoleLogger = ConsoleLogger;
+
+  window.ArrayBuilder = ArrayBuilder;
+
+  window.DuhWinning = DuhWinning;
 
 }).call(this);

@@ -13,6 +13,9 @@
     font-size: 44px;
     text-align: center;
 }
+#table_container div.block sup {
+    font-size: 16px;
+}
 
 #table_container div.block:hover {
     background: linear-gradient(top, #fff, #f0f0f0);

@@ -1,0 +1,148 @@
+<!DOCTYPE html>  <html> <head>   <title>parts2.coffee</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>            <div id="jump_to">         Jump To &hellip;         <div id="jump_wrapper">           <div id="jump_page">                                           <a class="source" href="game2.html">                 game2.coffee               </a>                                           <a class="source" href="parts2.html">                 parts2.coffee               </a>                        </div>         </div>       </div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               parts2.coffee             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>               <h1>#</h1>             </td>             <td class="code">               <div class="highlight"><pre><span class="nx">Logic</span><span class="o">/</span><span class="nx">Computer</span> <span class="nx">Game</span> <span class="nx">Code</span>
+<span class="nx">Copyright</span> <span class="p">(</span><span class="nx">c</span><span class="p">)</span> <span class="mi">2012</span> <span class="nx">Indiven</span> <span class="nx">LLC</span>
+
+<span class="nx">MIT</span> <span class="nx">License</span></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <h1>#</h1>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">Packet = </span><span class="nb">window</span><span class="p">.</span><span class="nx">Packet</span>
+<span class="nv">Part = </span><span class="nb">window</span><span class="p">.</span><span class="nx">Part</span>
+<span class="nv">oppositeDir = </span><span class="nb">window</span><span class="p">.</span><span class="nx">oppositeDir</span>
+
+<span class="nv">PacketHandlerTrait =</span>
+  <span class="nv">tick: </span><span class="nf">(t) -&gt;</span>
+    <span class="nx">@handlePackets</span><span class="p">()</span>
+    <span class="vi">@packets = </span><span class="nx">@packetQueue</span>
+    <span class="vi">@packetQueue = </span><span class="p">[]</span>
+
+<span class="k">class</span> <span class="nx">StraightWire</span> <span class="k">extends</span> <span class="nx">Part</span>
+  <span class="nx">@use</span> <span class="nx">PacketHandlerTrait</span>
+
+  <span class="vi">@spriteCodes: </span><span class="p">[</span>
+    <span class="nb">window</span><span class="p">.</span><span class="nx">SPRITES</span><span class="p">.</span><span class="nx">wire_up</span>
+    <span class="nb">window</span><span class="p">.</span><span class="nx">SPRITES</span><span class="p">.</span><span class="nx">wire_right</span>
+    <span class="nb">window</span><span class="p">.</span><span class="nx">SPRITES</span><span class="p">.</span><span class="nx">wire_down</span>
+    <span class="nb">window</span><span class="p">.</span><span class="nx">SPRITES</span><span class="p">.</span><span class="nx">wire_left</span>
+  <span class="p">]</span>
+
+  <span class="nv">constructor: </span><span class="o">-&gt;</span>
+    <span class="k">super</span>
+    <span class="vi">@inputs = </span><span class="p">[</span><span class="nb">window</span><span class="p">.</span><span class="nx">D_DOWN</span><span class="p">]</span>
+    <span class="vi">@outputs = </span><span class="p">[</span><span class="nb">window</span><span class="p">.</span><span class="nx">D_UP</span><span class="p">]</span>
+
+  <span class="nv">render: </span><span class="nf">(el) -&gt;</span>
+    <span class="nx">el</span><span class="p">.</span><span class="nx">text</span> <span class="nb">String</span><span class="p">.</span><span class="nx">fromCharCode</span><span class="p">(</span><span class="nx">StraightWire</span><span class="p">.</span><span class="nx">spriteCodes</span><span class="p">[</span><span class="nx">@orientation</span><span class="p">])</span>
+    <span class="nx">el</span><span class="p">.</span><span class="nx">css</span><span class="p">(</span><span class="s">&#39;color&#39;</span><span class="p">,</span> <span class="k">if</span> <span class="nx">@packets</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">or</span> <span class="nx">@packetQueue</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">then</span> <span class="s">&#39;#0a0&#39;</span> <span class="k">else</span> <span class="s">&#39;#000&#39;</span><span class="p">)</span>
+
+  <span class="nv">handlePackets: </span><span class="o">-&gt;</span>
+    <span class="k">while</span> <span class="nx">@packets</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span>
+      <span class="nv">pkt = </span><span class="nx">@packets</span><span class="p">.</span><span class="nx">shift</span><span class="p">()</span>
+      <span class="nv">b = </span><span class="nx">@block</span><span class="p">.</span><span class="nx">dir</span> <span class="nx">@outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+      <span class="k">if</span> <span class="nx">b</span><span class="o">?</span> <span class="o">and</span> <span class="nx">b</span><span class="p">.</span><span class="nx">part</span><span class="o">?</span> <span class="o">and</span> <span class="nx">b</span><span class="p">.</span><span class="nx">part</span><span class="p">.</span><span class="nx">acceptsPacket</span><span class="p">(</span><span class="nx">oppositeDir</span><span class="p">(</span><span class="nx">@outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nx">pkt</span><span class="p">)</span>
+        <span class="nx">b</span><span class="p">.</span><span class="nx">part</span><span class="p">.</span><span class="nx">pushPacket</span><span class="p">(</span><span class="nx">oppositeDir</span><span class="p">(</span><span class="nx">@outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nx">pkt</span><span class="p">)</span>
+    <span class="kc">true</span>
+
+<span class="k">class</span> <span class="nx">CurvedWire</span> <span class="k">extends</span> <span class="nx">StraightWire</span>
+  <span class="vi">@spriteCodes: </span><span class="p">[</span>
+    <span class="nb">window</span><span class="p">.</span><span class="nx">SPRITES</span><span class="p">.</span><span class="nx">wire_down_right</span>
+    <span class="nb">window</span><span class="p">.</span><span class="nx">SPRITES</span><span class="p">.</span><span class="nx">wire_left_down</span>
+    <span class="nb">window</span><span class="p">.</span><span class="nx">SPRITES</span><span class="p">.</span><span class="nx">wire_up_left</span>
+    <span class="nb">window</span><span class="p">.</span><span class="nx">SPRITES</span><span class="p">.</span><span class="nx">wire_right_up</span>
+    <span class="nb">window</span><span class="p">.</span><span class="nx">SPRITES</span><span class="p">.</span><span class="nx">wire_down_left</span>
+    <span class="nb">window</span><span class="p">.</span><span class="nx">SPRITES</span><span class="p">.</span><span class="nx">wire_left_up</span>
+    <span class="nb">window</span><span class="p">.</span><span class="nx">SPRITES</span><span class="p">.</span><span class="nx">wire_up_right</span>
+    <span class="nb">window</span><span class="p">.</span><span class="nx">SPRITES</span><span class="p">.</span><span class="nx">wire_right_down</span>
+  <span class="p">]</span>
+
+  <span class="nv">constructor: </span><span class="o">-&gt;</span>
+    <span class="k">super</span>
+    <span class="vi">@outputs = </span><span class="p">[</span><span class="nb">window</span><span class="p">.</span><span class="nx">D_RIGHT</span><span class="p">]</span>
+    <span class="vi">@mirrored = </span><span class="kc">false</span>
+
+  <span class="nv">render: </span><span class="nf">(el) -&gt;</span>
+    <span class="nv">i = </span><span class="nx">@orientation</span> <span class="o">+</span> <span class="p">(</span><span class="k">if</span> <span class="nx">@mirrored</span> <span class="k">then</span> <span class="mi">4</span> <span class="k">else</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="nx">el</span><span class="p">.</span><span class="nx">text</span> <span class="nb">String</span><span class="p">.</span><span class="nx">fromCharCode</span><span class="p">(</span><span class="nx">CurvedWire</span><span class="p">.</span><span class="nx">spriteCodes</span><span class="p">[</span><span class="nx">i</span><span class="p">])</span>
+    <span class="nx">el</span><span class="p">.</span><span class="nx">css</span><span class="p">(</span><span class="s">&#39;color&#39;</span><span class="p">,</span> <span class="k">if</span> <span class="nx">@packets</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">or</span> <span class="nx">@packetQueue</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">then</span> <span class="s">&#39;#0a0&#39;</span> <span class="k">else</span> <span class="s">&#39;#000&#39;</span><span class="p">)</span>
+
+<span class="nv">WireFactory =</span>
+  <span class="nv">downUp   : </span><span class="o">-&gt;</span> <span class="k">new</span> <span class="nx">StraightWire</span><span class="p">()</span>
+  <span class="nv">leftRight: </span><span class="o">-&gt;</span> <span class="k">new</span> <span class="nx">StraightWire</span><span class="p">().</span><span class="nx">setOrientation</span><span class="p">(</span><span class="nb">window</span><span class="p">.</span><span class="nx">D_RIGHT</span><span class="p">)</span>
+  <span class="nv">upDown   : </span><span class="o">-&gt;</span> <span class="k">new</span> <span class="nx">StraightWire</span><span class="p">().</span><span class="nx">setOrientation</span><span class="p">(</span><span class="nb">window</span><span class="p">.</span><span class="nx">D_DOWN</span><span class="p">)</span>
+  <span class="nv">rightLeft: </span><span class="o">-&gt;</span> <span class="k">new</span> <span class="nx">StraightWire</span><span class="p">().</span><span class="nx">setOrientation</span><span class="p">(</span><span class="nb">window</span><span class="p">.</span><span class="nx">D_LEFT</span><span class="p">)</span>
+
+  <span class="nv">downRight: </span><span class="o">-&gt;</span> <span class="k">new</span> <span class="nx">CurvedWire</span><span class="p">()</span>
+  <span class="nv">leftDown : </span><span class="o">-&gt;</span> <span class="k">new</span> <span class="nx">CurvedWire</span><span class="p">().</span><span class="nx">setOrientation</span><span class="p">(</span><span class="nb">window</span><span class="p">.</span><span class="nx">D_RIGHT</span><span class="p">)</span>
+  <span class="nv">upLeft   : </span><span class="o">-&gt;</span> <span class="k">new</span> <span class="nx">CurvedWire</span><span class="p">().</span><span class="nx">setOrientation</span><span class="p">(</span><span class="nb">window</span><span class="p">.</span><span class="nx">D_DOWN</span><span class="p">)</span>
+  <span class="nv">rightUp  : </span><span class="o">-&gt;</span> <span class="k">new</span> <span class="nx">CurvedWire</span><span class="p">().</span><span class="nx">setOrientation</span><span class="p">(</span><span class="nb">window</span><span class="p">.</span><span class="nx">D_LEFT</span><span class="p">)</span>
+
+  <span class="nv">downLeft : </span><span class="o">-&gt;</span> <span class="k">new</span> <span class="nx">CurvedWire</span><span class="p">()</span>
+  <span class="nv">leftUp   : </span><span class="o">-&gt;</span> <span class="k">new</span> <span class="nx">CurvedWire</span><span class="p">().</span><span class="nx">setOrientation</span><span class="p">(</span><span class="nb">window</span><span class="p">.</span><span class="nx">D_RIGHT</span><span class="p">).</span><span class="nx">mirror</span><span class="p">()</span>
+  <span class="nv">upRight  : </span><span class="o">-&gt;</span> <span class="k">new</span> <span class="nx">CurvedWire</span><span class="p">().</span><span class="nx">setOrientation</span><span class="p">(</span><span class="nb">window</span><span class="p">.</span><span class="nx">D_DOWN</span><span class="p">).</span><span class="nx">mirror</span><span class="p">()</span>
+  <span class="nv">rightDown: </span><span class="o">-&gt;</span> <span class="k">new</span> <span class="nx">CurvedWire</span><span class="p">().</span><span class="nx">setOrientation</span><span class="p">(</span><span class="nb">window</span><span class="p">.</span><span class="nx">D_LEFT</span><span class="p">).</span><span class="nx">mirror</span><span class="p">()</span>
+
+<span class="k">class</span> <span class="nx">PacketGenerator</span> <span class="k">extends</span> <span class="nx">Part</span>
+  <span class="nv">constructor: </span><span class="nf">(@data) -&gt;</span>
+    <span class="vi">@outputs = </span><span class="p">[</span><span class="nb">window</span><span class="p">.</span><span class="nx">D_UP</span><span class="p">]</span>
+    <span class="vi">@shouldTickFn = </span><span class="nf">(t) -&gt;</span> <span class="kc">true</span>
+
+  <span class="nv">setShouldTickFn: </span><span class="nf">(fn) -&gt;</span>
+    <span class="vi">@shouldTickFn = </span><span class="nx">fn</span>
+    <span class="nx">@</span>
+
+  <span class="nv">render: </span><span class="nf">(el) -&gt;</span>
+    <span class="nx">el</span><span class="p">.</span><span class="nx">text</span> <span class="s">&#39;G&#39;</span>
+
+  <span class="nv">tick: </span><span class="nf">(t) -&gt;</span>
+    <span class="k">return</span> <span class="kc">null</span> <span class="k">if</span> <span class="o">not</span> <span class="nx">@shouldTickFn</span><span class="p">(</span><span class="nx">t</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="nx">output</span><span class="p">,</span> <span class="nx">i</span> <span class="k">in</span> <span class="nx">@outputs</span>
+      <span class="nv">b = </span><span class="nx">@block</span><span class="p">.</span><span class="nx">dir</span> <span class="nx">output</span>
+      <span class="nv">pkt = </span><span class="k">new</span> <span class="nx">Packet</span><span class="p">(</span><span class="nx">@data</span><span class="p">)</span>
+      <span class="k">if</span> <span class="nx">b</span><span class="o">?</span> <span class="o">and</span> <span class="nx">b</span><span class="p">.</span><span class="nx">part</span><span class="o">?</span> <span class="o">and</span> <span class="nx">b</span><span class="p">.</span><span class="nx">part</span><span class="p">.</span><span class="nx">acceptsPacket</span><span class="p">(</span><span class="nx">oppositeDir</span><span class="p">(</span><span class="nx">output</span><span class="p">),</span> <span class="nx">pkt</span><span class="p">)</span>
+        <span class="nx">b</span><span class="p">.</span><span class="nx">part</span><span class="p">.</span><span class="nx">pushPacket</span><span class="p">(</span><span class="nx">oppositeDir</span><span class="p">(</span><span class="nx">output</span><span class="p">),</span> <span class="nx">pkt</span><span class="p">)</span>
+    <span class="kc">true</span>
+
+<span class="k">class</span> <span class="nx">Accumulator</span> <span class="k">extends</span> <span class="nx">Part</span>
+  <span class="nx">@use</span> <span class="nx">PacketHandlerTrait</span>
+
+  <span class="nv">constructor: </span><span class="nf">(@inc) -&gt;</span>
+    <span class="vi">@inputs = </span><span class="p">[</span><span class="nb">window</span><span class="p">.</span><span class="nx">D_DOWN</span><span class="p">]</span>
+    <span class="vi">@outputs = </span><span class="p">[</span><span class="nb">window</span><span class="p">.</span><span class="nx">D_UP</span><span class="p">]</span>
+
+  <span class="nv">render: </span><span class="nf">(el) -&gt;</span>
+    <span class="nx">el</span><span class="p">.</span><span class="nx">text</span> <span class="s">&#39;+&#39;</span>
+    <span class="nx">el</span><span class="p">.</span><span class="nx">css</span><span class="p">(</span><span class="s">&#39;color&#39;</span><span class="p">,</span> <span class="k">if</span> <span class="nx">@packets</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">or</span> <span class="nx">@packetQueue</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">then</span> <span class="s">&#39;#0a0&#39;</span> <span class="k">else</span> <span class="s">&#39;#000&#39;</span><span class="p">)</span>
+
+  <span class="nv">acceptsPacket: </span><span class="nf">(dir, pkt) -&gt;</span>
+    <span class="nx">@hasInput</span><span class="p">(</span><span class="nx">dir</span><span class="p">)</span> <span class="o">and</span> <span class="nx">pkt</span><span class="p">.</span><span class="nx">type</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;number&#39;</span>
+
+  <span class="nv">handlePackets: </span><span class="o">-&gt;</span>
+    <span class="k">while</span> <span class="nx">@packets</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span>
+      <span class="nv">pkt = </span><span class="nx">@packets</span><span class="p">.</span><span class="nx">shift</span><span class="p">()</span>
+      <span class="nv">b = </span><span class="nx">@block</span><span class="p">.</span><span class="nx">dir</span><span class="p">(</span><span class="nx">@outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+      <span class="k">if</span> <span class="nx">b</span><span class="o">?</span> <span class="o">and</span> <span class="nx">b</span><span class="p">.</span><span class="nx">part</span><span class="o">?</span> <span class="o">and</span> <span class="nx">b</span><span class="p">.</span><span class="nx">part</span><span class="p">.</span><span class="nx">acceptsPacket</span><span class="p">(</span><span class="nx">oppositeDir</span><span class="p">(</span><span class="nx">@outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nx">pkt</span><span class="p">)</span>
+        <span class="nv">pkt.data = </span><span class="nx">pkt</span><span class="p">.</span><span class="nx">data</span> <span class="o">+</span> <span class="nx">@inc</span>
+        <span class="nx">b</span><span class="p">.</span><span class="nx">part</span><span class="p">.</span><span class="nx">pushPacket</span><span class="p">(</span><span class="nx">oppositeDir</span><span class="p">(</span><span class="nx">@outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nx">pkt</span><span class="p">)</span>
+    <span class="kc">true</span>
+
+<span class="k">class</span> <span class="nx">ConsoleLogger</span> <span class="k">extends</span> <span class="nx">Part</span>
+  <span class="nx">@use</span> <span class="nx">PacketHandlerTrait</span>
+
+  <span class="nv">constructor: </span><span class="nf">(@key) -&gt;</span>
+    <span class="vi">@inputs = </span><span class="p">[</span><span class="nb">window</span><span class="p">.</span><span class="nx">D_UP</span><span class="p">,</span> <span class="nb">window</span><span class="p">.</span><span class="nx">D_RIGHT</span><span class="p">,</span> <span class="nb">window</span><span class="p">.</span><span class="nx">D_DOWN</span><span class="p">,</span> <span class="nb">window</span><span class="p">.</span><span class="nx">D_LEFT</span><span class="p">]</span>
+
+  <span class="nv">render: </span><span class="nf">(el) -&gt;</span>
+    <span class="nx">el</span><span class="p">.</span><span class="nx">text</span> <span class="s">&#39;&gt;&#39;</span>
+
+  <span class="nv">handlePackets: </span><span class="o">-&gt;</span>
+    <span class="k">while</span> <span class="nx">@packets</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span>
+      <span class="nv">pkt = </span><span class="nx">@packets</span><span class="p">.</span><span class="nx">shift</span><span class="p">()</span>
+      <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s">&quot;ConsoleLogger(</span><span class="si">#{</span><span class="nx">@key</span><span class="si">}</span><span class="s">): </span><span class="si">#{</span><span class="nx">pkt</span><span class="p">.</span><span class="nx">toString</span><span class="p">()</span><span class="si">}</span><span class="s">&quot;</span>
+    <span class="kc">true</span>
+
+
+<span class="nb">window</span><span class="p">.</span><span class="nv">StraightWire = </span><span class="nx">StraightWire</span>
+<span class="nb">window</span><span class="p">.</span><span class="nv">CurvedWire = </span><span class="nx">CurvedWire</span>
+<span class="nb">window</span><span class="p">.</span><span class="nv">WireFactory = </span><span class="nx">WireFactory</span>
+<span class="nb">window</span><span class="p">.</span><span class="nv">PacketGenerator = </span><span class="nx">PacketGenerator</span>
+<span class="nb">window</span><span class="p">.</span><span class="nv">Accumulator = </span><span class="nx">Accumulator</span>
+<span class="nb">window</span><span class="p">.</span><span class="nv">ConsoleLogger = </span><span class="nx">ConsoleLogger</span>
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 
